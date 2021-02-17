@@ -15,10 +15,10 @@ conn_str = (f'Driver={db_driver}; '
             f'UID={db_user}; '
             f'PWD={db_password}; ')
 
+
 class timedb:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
-        
         self.logger.debug(f'sql connection string: {conn_str}')
         self.logger.debug('{} initialized')
 
@@ -32,36 +32,43 @@ class timedb:
             badge_event = "GEHEN"
         else:
             msg = (f'unknown value for badge_event: "{badge_event}" '
-                   f'valid values are "in" and "out"'
-            )
+                   f'valid values are "in" and "out"')
             self.logger.error(msg)
             return False
-        try:  
-            self.cursor.execute(f'IF NOT EXISTS(select * from {db_tablename} where [timestamp] = ? AND [personal_card_id] = ?) '
-                                f'INSERT INTO {db_tablename} '
-                                '([guid], '
-                                '[timestamp], '
-                                '[personal_card_id], '
-                                '[entry_type], '
-                                '[server_timestamp], '
-                                '[client_ident], '
-                                'personal_addition) '
-                                'VALUES (NEWID(),?,?,?,GETDATE(),?,?)',
-                                (time, badge_id, time, badge_id, badge_event, device_id, 'lora'))
+        try:
+            self.cursor.execute(
+                'IF NOT EXISTS(select * from '
+                f'{db_tablename} where [timestamp] = ? '
+                'AND [personal_card_id] = ?) '
+                f'INSERT INTO {db_tablename} '
+                '([guid], '
+                '[timestamp], '
+                '[personal_card_id], '
+                '[entry_type], '
+                '[server_timestamp], '
+                '[client_ident], '
+                'personal_addition) '
+                'VALUES (NEWID(),?,?,?,GETDATE(),?,?)',
+                (
+                    time,
+                    badge_id,
+                    time,
+                    badge_id,
+                    badge_event,
+                    device_id,
+                    'lora'))
             self.cursor.commit()
             ret = self.cursor.rowcount == 1
-            
         except pyodbc.Error as ex:
             sqlstate = ex.args[0]
             r = f'fehler. {ex} -- sqlstate = {sqlstate}'
             self.logger.error(r)
         return ret
 
-
     def getTimeTrackEntries(self):
         self.conn = pyodbc.connect(conn_str)
         self.cursor = self.conn.cursor()
-        sql = f'SELECT * FROM [oc_terminal_user_test].[terminal_entry]'
+        sql = 'SELECT * FROM [oc_terminal_user_test].[terminal_entry]'
         self.cursor.execute(sql)
         res = '<table>'
         for row in self.cursor:
@@ -71,6 +78,6 @@ class timedb:
             res += '</tr>'
         res += '</table>'
         return res
-    
+
     def disconnect(self):
         self.conn.close()
