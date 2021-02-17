@@ -34,8 +34,8 @@ class timedb:
             msg = (f'unknown value for badge_event: "{badge_event}" '
                    f'valid values are "in" and "out"'
             )
-            self.logger.error(msg)                
-            return msg
+            self.logger.error(msg)
+            return False
         try:  
             self.cursor.execute(f'IF NOT EXISTS(select * from {db_tablename} where [timestamp] = ? AND [personal_card_id] = ?) '
                                 f'INSERT INTO {db_tablename} '

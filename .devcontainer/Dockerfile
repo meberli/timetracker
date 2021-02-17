@@ -3,7 +3,8 @@ FROM python:3.6-slim
 # Install prerequisites
 RUN apt-get update && apt-get install -y \
 curl \
-gnupg2
+gnupg2 \
+g++
 
 RUN pip install --no-cache-dir matplotlib pandas
 

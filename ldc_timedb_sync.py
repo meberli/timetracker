@@ -19,7 +19,7 @@ logger.setLevel(logging.INFO)
 logger.error("Import is starting")
 
 boxid = '2306ddb0-67d6-40d7-8099-17190977f6f0'
-tagfilter = 'messagetype,Badge_Event'
+tagfilter = 'messagetype,badge_event'
 
 ldc = ldc.ldc()
 tdb = timedb.timedb()
@@ -29,8 +29,14 @@ def main():
     dt_from = datetime.combine(dt_to.date(), time.min) - timedelta(days=1)
     data=ldc.get_all_sensors(boxid, dt_from, dt_to, tagfilter)
     for entry in data[0]['series'][0]['values']:
+        logger.info(
+            f'insertTimeTrackEntry('
+            f'uuid: {entry[26]}, '
+            f'inout: {entry[2]}, '
+            f'device: {entry[1]}, '
+            f'ts: {entry[0]})')
         if (tdb.insertTimeTrackEntry(entry[2], entry[9], entry[4], entry[0])):
-            logger.info(f'successfully inserted new entry : ts {entry[0]}, uuid: {entry[9]}, inout: {entry[4]}')
+            logger.info(f'successfully inserted new entry : ts {entry[0]}, uuid: {entry[26]}, inout: {entry[2]}')
         else:
             logger.info(f'entry already exists - skipping.  ts {entry[0]}, uuid: {entry[9]}, inout: {entry[4]}') 
 
