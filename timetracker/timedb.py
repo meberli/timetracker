@@ -2,29 +2,22 @@
 import pyodbc
 import logging
 
-db_server = "10.100.100.150"
-db_user = "piot_user_test"
-db_password = "UIRcUQFWfnA8uasI4IGM"
-db_dbname = "ocTerminal40_TEST"
-db_tablename = "[oc_terminal_user_test].[terminal_entry]"
-
 db_driver = "{ODBC Driver 17 for SQL Server}"
-conn_str = (f'Driver={db_driver}; '
-            f'Server={db_server}; '
-            f'Database={db_dbname}; '
-            f'UID={db_user}; '
-            f'PWD={db_password}; ')
-
 
 class timedb:
-    def __init__(self):
+    def __init__(self, server=None, db=None, uid=None, pwd=None, table=None):
         self.logger = logging.getLogger(__name__)
-        self.logger.debug(f'sql connection string: {conn_str}')
-        self.logger.debug('{} initialized')
+        self.conn_str = (f'Driver={db_driver}; '
+            f'Server={server}; '
+            f'Database={db}; '
+            f'UID={uid}; '
+            f'PWD={pwd}; ')
+        self.table=table
+        self.logger.debug(f'db initialized with sql connection string: {self.conn_str}, table: {self.table}')
 
     def insertTimeTrackEntry(self, device_id, badge_id, badge_event, time):
         r = False
-        self.conn = pyodbc.connect(conn_str)
+        self.conn = pyodbc.connect(self.conn_str)
         self.cursor = self.conn.cursor()
         if (badge_event == "in"):
             badge_event = "KOMMEN"
@@ -38,9 +31,9 @@ class timedb:
         try:
             self.cursor.execute(
                 'IF NOT EXISTS(select * from '
-                f'{db_tablename} where [timestamp] = ? '
+                f'{self.table} where [timestamp] = ? '
                 'AND [personal_card_id] = ?) '
-                f'INSERT INTO {db_tablename} '
+                f'INSERT INTO {self.table} '
                 '([guid], '
                 '[timestamp], '
                 '[personal_card_id], '
@@ -66,9 +59,9 @@ class timedb:
         return ret
 
     def getTimeTrackEntries(self):
-        self.conn = pyodbc.connect(conn_str)
+        self.conn = pyodbc.connect(self.conn_str)
         self.cursor = self.conn.cursor()
-        sql = 'SELECT * FROM [oc_terminal_user_test].[terminal_entry]'
+        sql = f'SELECT * FROM {self.table}'
         self.cursor.execute(sql)
         res = '<table>'
         for row in self.cursor:
